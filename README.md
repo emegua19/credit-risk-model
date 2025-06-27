@@ -1,41 +1,42 @@
-# Credit Risk Probability Model
+# Credit Risk Probability Model  
+**End-to-End ML Project | 10 Academy | Bati Bank – Buy Now, Pay Later**
+
+[![CI/CD](https://img.shields.io/github/actions/workflow/status/<your-username>/credit-risk-model/ci.yml?label=CI%2FCD&style=flat-square)](https://github.com/<your-username>/credit-risk-model/actions)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](./LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg?style=flat-square)](https://www.python.org/)
+
+---
 
 ## Project Overview
-This project, part of the 10 Academy KAIM5 Week 5 program, involves building an end‑to‑end machine learning solution for **Bati Bank** to assess credit risk for a buy‑now‑pay‑later (BNPL) service. Using eCommerce transaction data, the model will:
-- Predict credit risk (is_high_risk)
-- Assign a credit score from risk probabilities
-- Recommend optimal loan amounts and durations  
-All while adhering to **Basel II Capital Accord** standards.
+
+This project is part of the 10 Academy KAIM5 - Week 5 Challenge. It involves building a production-grade Credit Risk Scoring System for Bati Bank, a leading financial provider. The model uses alternative eCommerce behavioral data to:
+
+- Predict risk probability  
+- Assign credit scores  
+- Recommend loan limits and durations  
+
+All of this is designed in compliance with the Basel II Capital Accord.
 
 ---
 
 ## Project Structure
+
 ```
 
-credit‑risk‑model/
-├── .github/
-│   └── workflows/
-│       └── ci.yml
-├── notebooks/
-│   └── 1.0‑eda.ipynb
+credit-risk-model/
+├── .github/workflows/ci.yml          # GitHub Actions for CI/CD
+├── notebooks/1.0-eda.ipynb           # Exploratory data analysis
 ├── src/
-│   ├── **init**.py
-│   ├── config.py
-│   ├── data\_processing.py
-│   ├── inference.py
-│   ├── models.py
-│   ├── rfm\_clustering.py
+│   ├── config.py                     # Configurations
+│   ├── data\_processing.py           # Feature engineering logic
+│   ├── inference.py                 # Inference code
+│   ├── models.py                    # Training and evaluation logic
+│   ├── rfm\_clustering.py            # RFM proxy variable generation
 │   └── api/
-│       ├── **init**.py
-│       ├── main.py
-│       └── pydantic\_models.py
-├── tests/
-│   ├── **init**.py
-│   ├── test\_data\_processing.py
-│   ├── test\_rfm\_clustering.py
-│   └── test\_models.py
-├── .gitignore
-├── docker‑compose.yml
+│       ├── main.py                  # FastAPI backend
+│       └── pydantic\_models.py      # Input/output validation
+├── tests/                            # Unit tests for robustness
+├── docker-compose.yml
 ├── requirements.txt
 └── README.md
 
@@ -45,83 +46,100 @@ credit‑risk‑model/
 
 ## Credit Scoring Business Understanding
 
-### 1. Influence of Basel II on Model Interpretability and Documentation
-The **Basel II Capital Accord** (2004) emphasizes risk‑sensitive capital allocation:
+### 1. Basel II and the Need for Interpretable, Auditable Models
 
-- **Pillar 1 (Minimum Capital Requirements):** Banks must hold ≥ 8 % of risk‑weighted assets against credit risk, often using IRB (Internal Ratings‑Based) models.  
-- **Pillar 3 (Market Discipline):** Requires both qualitative (annual) and quantitative (bi‑annual) disclosures of risk management practices.
+The Basel II Accord outlines a comprehensive framework for risk-sensitive banking regulation, composed of three interrelated pillars:
 
-**Why this matters:**  
-Interpretable models (e.g., Logistic Regression with Weight of Evidence) make it clear how each feature influences the risk score, which regulators can audit. Detailed documentation—covering data sources, assumptions, transformation logic, and validation results—is mandatory to satisfy Basel II’s transparency and validation requirements.
+| Pillar       | Description |
+|--------------|-------------|
+| Pillar 1     | Ensures banks hold ≥ 8% capital against risk-weighted assets (RWA). Allows statistical risk models (IRB) requiring full documentation and validation. |
+| Pillar 2     | Supervisors evaluate a bank's internal risk models and capital adequacy under stress. Models must be defensible, conservative, and stress-tested. |
+| Pillar 3     | Enforces transparency with public disclosure of risk management processes and metrics, creating external pressure to maintain model quality. |
 
-### 2. Necessity and Risks of Using a Proxy Variable
-#### Why a proxy?
-Our dataset lacks a direct “default” label. We construct an **is_high_risk** proxy by:
-1. Calculating **RFM** (Recency, Frequency, Monetary) metrics per customer  
-2. Clustering with **K‑Means** (3 segments)  
-3. Labeling the least engaged cluster (low R, low F, low M) as high‑risk (`is_high_risk = 1`)
+**Modeling Implications:**  
+We prioritize transparent models (e.g., Logistic Regression with WoE) and maintain detailed documentation to satisfy internal validation and regulatory audits.
 
-#### Potential business and regulatory risks:
-- **Misclassification:** Low‑activity but creditworthy customers may be flagged high‑risk (false positives), denying them credit; conversely, risky customers might slip through (false negatives).
-- **Incomplete View:** RFM ignores credit history, macroeconomic factors, and payment behavior, possibly biasing risk estimates.
-- **Correlation Bias (Endogeneity):** If RFM correlates with unmodeled drivers of default (e.g., seasonal shopping), predictions can be systematically skewed.
-- **Regulatory Exposure:** An ineffective proxy could breach Basel II disclosure obligations, leading to penalties.
+---
 
-> **Mitigation:** Rigorously validate the proxy against any available external default data, monitor performance, and incorporate additional data sources when possible.
+### 2. Why a Proxy Variable is Needed — and the Risks
 
-### 3. Trade‑offs: Simple vs. Complex Models
-| Aspect               | **Simple Models**<br/>(Logistic Regression + WoE)       | **Complex Models**<br/>(Gradient Boosting)                            |
-|----------------------|---------------------------------------------------------|------------------------------------------------------------------------|
-| **Interpretability** | Highly transparent; easy to explain to regulators        | “Black box”; requires SHAP or LIME for feature‑level insights          |
-| **Regulatory Fit**   | Straightforward validation and disclosure               | Extra documentation and explainability work needed                     |
-| **Predictive Power** | May underfit and miss non‑linear patterns               | Captures complex relationships → higher accuracy                       |
-| **Resource Needs**   | Low compute & domain expertise                          | Higher compute, specialized tuning, and ongoing monitoring             |
-| **Overfitting Risk** | Lower; robust with smaller datasets                     | Higher; needs careful cross‑validation and regularization              |
-| **Business Impact**  | Predictable, stable decisions; potentially more false rejects | Better risk discrimination; may over‑cap and require capital buffers |
+The dataset does not include a direct label for “default.” Instead, we build a proxy target variable:
 
-> **Recommendation:** In a regulated context, start with a simple, interpretable model for compliance ease. If performance gaps remain material, consider a complex model—paired with strong explainability tools—and re‑evaluate capital requirements accordingly.
+- Use Recency, Frequency, and Monetary (RFM) features  
+- Cluster customers using K-Means (k=3)  
+- Label the least engaged group as high-risk (`is_high_risk = 1`)
+
+**Risks Involved:**
+
+- Misclassification: Low-frequency but creditworthy customers may be wrongly denied.
+- Bias: Proxy ignores critical variables like income or debt history.
+- Endogeneity: Behavior might correlate with untracked confounders, biasing predictions.
+- Compliance: Regulatory concerns may arise if proxy logic isn't well-validated.
+
+**Mitigation:** Use clustering diagnostics, domain expert validation, and incorporate more data sources when available.
+
+---
+
+### 3. Model Selection Trade-Offs
+
+| Feature             | Simple Model (Logistic Regression + WoE)        | Complex Model (e.g., Gradient Boosting, XGBoost) |
+|---------------------|--------------------------------------------------|---------------------------------------------------|
+| Interpretability     | Transparent and regulator-friendly               | Black-box; requires SHAP or LIME for explanation  |
+| Regulatory Fit       | Easily documented and auditable                  | Requires additional justification and validation  |
+| Accuracy             | May underfit complex relationships               | High predictive power for complex patterns        |
+| Developer Overhead   | Simple to train, debug, and deploy               | Resource-intensive; requires tuning and monitoring |
+| Overfitting Risk     | Low on small data                                | Higher; needs validation and regularization       |
+| Business Impact      | Conservative decisions may miss credit opportunities | Optimized approval rates, but harder to govern    |
+
+**Conclusion:**  
+Start with simple models to meet regulatory expectations. Consider complex models only if they significantly improve accuracy and can be explained effectively.
 
 ---
 
 ## Setup Instructions
 
-1. **Clone the repo**  
-   ```bash
-   git clone <your‑repo‑url>
-   cd credit‑risk‑model
+1. Clone the repository:
+```bash
+git clone https://github.com/emegua19/credit-risk-model.git
+cd credit-risk-model
 ````
 
-2. **Install dependencies**
+2. Install dependencies:
 
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. **Run EDA**
+```bash
+pip install -r requirements.txt
+```
 
-   ```bash
-   jupyter notebook notebooks/1.0-eda.ipynb
-   ```
-4. **Train models**
+3. Run EDA:
 
-   ```bash
-   python src/models.py
-   ```
-5. **Run API (Docker)**
+```bash
+jupyter notebook notebooks/1.0-eda.ipynb
+```
 
-   ```bash
-   docker-compose up --build
-   ```
+4. Train models:
+
+```bash
+python src/models.py
+```
+
+5. Run the API with Docker:
+
+```bash
+docker-compose up --build
+```
 
 ---
 
-## Key References
+## References
 
-* [Basel II Capital Accord Overview (Investopedia)](https://www.investopedia.com/terms/b/baselii.asp)
-* [Credit Risk Modeling and Scorecards](https://towardsdatascience.com/how-to-develop-a-credit-risk-model-and-scorecard-91335fc01f03)
-* [Proxy Variables in Regression Models](https://www.analyticsvidhya.com/blog/2021/06/how-to-use-proxy-variables-in-a-regression-model/)
-* [SHAP for Model Explainability](https://github.com/slundberg/shap)
+* [Basel II: Overview – Investopedia](https://www.investopedia.com/terms/b/baselii.asp)
+* [Credit Risk Scoring with Scorecards – TDS](https://towardsdatascience.com/how-to-develop-a-credit-risk-model-and-scorecard-91335fc01f03)
+* [Proxy Variables Explained – Analytics Vidhya](https://www.analyticsvidhya.com/blog/2021/06/how-to-use-proxy-variables-in-a-regression-model/)
+* [SHAP for Explainable ML](https://github.com/slundberg/shap)
 
 ---
 
-```
-```
+## Author
+
+**Yitbarek Geletaw**
+Analytics Engineer – Bati Bank
