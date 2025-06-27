@@ -1,0 +1,62 @@
+# Data directories
+data/
+*.csv
+*.parquet
+
+# Python virtual environments
+.venv/
+env/
+venv/
+*.venv
+
+# Python compiled files
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# Jupyter Notebook checkpoints
+*.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# Model artifacts
+models/
+*.pkl
+*.joblib
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Docker-related files
+*.dockerignore
+docker-compose.override.yml
+
+# MLflow tracking artifacts
+mlruns/
+*.mlflow
+
+# Logs and temporary files
+*.log
+*.tmp
+*.cache
+
+# Testing and coverage reports
+.coverage
+coverage.xml
+*.cover
+
+# Environment variables
+.env
+*.env
+
+# Package installation artifacts
+*.egg-info/
+dist/
+build/
