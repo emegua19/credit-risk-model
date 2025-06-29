@@ -1,163 +1,212 @@
-# Credit Risk Probability Model  
-**End-to-End ML Project | 10 Academy | Bati Bank – Buy Now, Pay Later**
+#  Credit Risk Probability Model
 
-[![CI/CD](https://img.shields.io/github/actions/workflow/status/<your-username>/credit-risk-model/ci.yml?label=CI%2FCD&style=flat-square)](https://github.com/<your-username>/credit-risk-model/actions)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](./LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg?style=flat-square)](https://www.python.org/)
+*End-to-End ML Project | 10 Academy | Bati Bank – Buy Now, Pay Later*
 
 ---
 
-## Project Overview
+##  Project Overview
 
-This project is part of the 10 Academy KAIM5 - Week 5 Challenge. It involves building a production-grade Credit Risk Scoring System for Bati Bank, a leading financial provider. The model uses alternative eCommerce behavioral data to:
+This project, part of the **10 Academy KAIM5 - Week 5 Challenge**, delivers a production-ready Credit Risk Scoring System for **Bati Bank**, a leading financial provider. Using alternative **eCommerce behavioral data** (95,663 rows), the system:
 
-- Predict risk probability  
-- Assign credit scores  
-- Recommend loan limits and durations  
+✅ Predicts credit risk probabilities
+✅ Assigns credit scores
+✅ Recommends loan limits and durations
 
-All of this is designed in compliance with the Basel II Capital Accord.
+The project is built in full compliance with the **Basel II Capital Accord**, following a modular, scalable, Object-Oriented Programming (OOP) approach.
+
+✔️ **Tasks 1–4** (Business Understanding, EDA, Feature Engineering, Proxy Variable Creation) — ✅ Completed by *June 29, 2025*
+✔️ **Tasks 5–6** (Model Training, API Deployment) —  In Progress, scheduled for *July 1, 2025*
 
 ---
 
-## Project Structure
+##  CREDIT-RISK-MODEL Project Structure
 
 ```
-
-credit-risk-model/
-├── .github/workflows/ci.yml          # GitHub Actions for CI/CD
-├── notebooks/1.0-eda.ipynb           # Exploratory data analysis
+CREDIT-RISK-MODEL/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                    # GitHub Actions workflow for CI/CD (linting, testing)
+├── data/
+│   ├── raw/                         # Raw datasets (e.g., transactions.csv)
+│   └── processed/                   # Processed data files (e.g., processed_data.csv)
+├── notebooks/
+│   └── 1.0-eda.ipynb                # Jupyter Notebook for Exploratory Data Analysis
+├── outputs/
+│   ├── logs/                        # Log files from script executions
+│   └── plots/                       # Generated plots and visualizations
 ├── src/
-│   ├── config.py                     # Configurations
-│   ├── data\_processing.py           # Feature engineering logic
-│   ├── inference.py                 # Inference code
-│   ├── models.py                    # Training and evaluation logic
-│   ├── rfm\_clustering.py            # RFM proxy variable generation
+│   ├── __init__.py                  # Makes src a Python package
+│   ├── config.py                    # Configuration settings (paths, hyperparameters)
+│   ├── data_explorer.py             # OOP-based class for EDA and visualizations
+│   ├── data_processing.py           # OOP-based data processing pipeline
+│   ├── inference.py                 # Logic for model inference and predictions
+│   ├── models.py                    # Machine learning model definitions
+│   ├── rfm_clustering.py            # OOP-based RFM calculation and clustering
 │   └── api/
-│       ├── main.py                  # FastAPI backend
-│       └── pydantic\_models.py      # Input/output validation
-├── tests/                            # Unit tests for robustness
-├── docker-compose.yml
-├── requirements.txt
-└── README.md
-
-````
-
----
-
-## Credit Scoring Business Understanding
-
-### 1. Basel II and the Need for Interpretable, Auditable Models
-
-The Basel II Accord outlines a comprehensive framework for risk-sensitive banking regulation, composed of three interrelated pillars:
-
-| Pillar       | Description |
-|--------------|-------------|
-| Pillar 1     | Ensures banks hold ≥ 8% capital against risk-weighted assets (RWA). Allows statistical risk models (IRB) requiring full documentation and validation. |
-| Pillar 2     | Supervisors evaluate a bank's internal risk models and capital adequacy under stress. Models must be defensible, conservative, and stress-tested. |
-| Pillar 3     | Enforces transparency with public disclosure of risk management processes and metrics, creating external pressure to maintain model quality. |
-
-**Modeling Implications:**  
-We prioritize transparent models (e.g., Logistic Regression with WoE) and maintain detailed documentation to satisfy internal validation and regulatory audits.
+│       ├── __init__.py              # Makes api a Python package
+│       ├── main.py                  # FastAPI application for serving predictions
+│       └── pydantic_models.py       # Pydantic models for API data validation
+├── tests/
+│   ├── __init__.py                  # Makes tests a Python package
+│   ├── test_data_explorer.py        # Unit tests for DataExplorer
+│   ├── test_data_processing.py      # Unit tests for DataProcessor
+│   ├── test_rfm_clustering.py       # Unit tests for RFMClustering
+│   └── test_models.py               # Unit tests for models
+├── scripts/
+│   ├── run_data_processing.py       # Script to execute data processing pipeline
+│   ├── run_models.py                # Script to execute model training
+│   └── run_rfm_clustering.py        # Script to execute RFM clustering
+├── .gitignore                       # Files and directories to exclude from version control
+├── .venv/                           # Python virtual environment
+├── docker-compose.yml               # Docker Compose configuration for API deployment
+├── LICENSE                          # Project license (e.g., MIT License)
+├── README.md                        # Project documentation and instructions
+├── requirements.txt                 # Python dependencies (e.g., pandas, scikit-learn)
+└── .pytest_cache/                   # Cache directory for pytest
+```
 
 ---
 
-### 2. Why a Proxy Variable is Needed — and the Risks
+##  Setup Instructions
 
-The dataset does not include a direct label for “default.” Instead, we build a proxy target variable:
-
-- Use Recency, Frequency, and Monetary (RFM) features  
-- Cluster customers using K-Means (k=3)  
-- Label the least engaged group as high-risk (`is_high_risk = 1`)
-
-**Risks Involved:**
-
-- Misclassification: Low-frequency but creditworthy customers may be wrongly denied.
-- Bias: Proxy ignores critical variables like income or debt history.
-- Endogeneity: Behavior might correlate with untracked confounders, biasing predictions.
-- Compliance: Regulatory concerns may arise if proxy logic isn't well-validated.
-
-**Mitigation:** Use clustering diagnostics, domain expert validation, and incorporate more data sources when available.
-
----
-
-### 3. Model Selection Trade-Offs
-
-| Feature             | Simple Model (Logistic Regression + WoE)        | Complex Model (e.g., Gradient Boosting, XGBoost) |
-|---------------------|--------------------------------------------------|---------------------------------------------------|
-| Interpretability     | Transparent and regulator-friendly               | Black-box; requires SHAP or LIME for explanation  |
-| Regulatory Fit       | Easily documented and auditable                  | Requires additional justification and validation  |
-| Accuracy             | May underfit complex relationships               | High predictive power for complex patterns        |
-| Developer Overhead   | Simple to train, debug, and deploy               | Resource-intensive; requires tuning and monitoring |
-| Overfitting Risk     | Low on small data                                | Higher; needs validation and regularization       |
-| Business Impact      | Conservative decisions may miss credit opportunities | Optimized approval rates, but harder to govern    |
-
-**Conclusion:**  
-Start with simple models to meet regulatory expectations. Consider complex models only if they significantly improve accuracy and can be explained effectively.
-
----
-
-## EDA Summary – Key Insights
-
-1. **Highly Imbalanced Target (FraudResult):**  
-   Out of 95,663 transactions, only 193 rows have `FraudResult > 0`, meaning fraudulent activity accounts for just **0.2%** of all data. This extreme imbalance will require mitigation strategies such as class weighting, oversampling, or specialized evaluation metrics during model training.
-
-2. **Significant Number of Negative Amounts:**  
-   Approximately **40% of transactions** (38,189 rows) have a **negative `Amount`**, suggesting that negative values are not errors but likely represent refunds, reversals, or failed payments. This characteristic will be captured in a new binary feature `IsNegativeAmount`.
-
-3. **No Missing Values:**  
-   The dataset is clean, with **no missing values** across all columns. This simplifies data preparation and allows full usage of available features without imputation.
-
-4. **Severe Skewness and Outliers in Amount/Value:**  
-   The `Amount` and `Value` columns show heavy **right-skew** and contain extreme **outliers** (up to 9.88 million), while the median is near 1,000. These will require transformation or outlier treatment to avoid biasing the model.
-
-5. **Uninformative Feature – CountryCode:**  
-   The `CountryCode` column has **no variability** (all values are 256), indicating it provides no discriminatory power for the model and should be dropped during preprocessing.
-
----
-
-## Setup Instructions
-
-1. Clone the repository:
 ```bash
 git clone https://github.com/emegua19/credit-risk-model.git
-cd credit-risk-model
-````
+cd CREDIT-RISK-MODEL
 
-2. Install dependencies:
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
-```bash
 pip install -r requirements.txt
 ```
 
-3. Run EDA:
+---
+
+##  Run Key Pipelines
 
 ```bash
+# EDA notebook
 jupyter notebook notebooks/1.0-eda.ipynb
-```
 
-4. Train models:
+# Data Processing
+python scripts/run_data_processing.py
 
-```bash
-python src/models.py
-```
+# RFM Proxy Label Creation
+python scripts/run_rfm_clustering.py
 
-5. Run the API with Docker:
+# Model Training (Task 5)
+python scripts/run_models.py
 
-```bash
+# API Deployment (Task 6)
 docker-compose up --build
 ```
 
 ---
 
-## References
+##  Basel II and the Need for Interpretable, Auditable Models
 
-* [Basel II: Overview – Investopedia](https://www.investopedia.com/terms/b/baselii.asp)
-* [Credit Risk Scoring with Scorecards – TDS](https://towardsdatascience.com/how-to-develop-a-credit-risk-model-and-scorecard-91335fc01f03)
-* [Proxy Variables Explained – Analytics Vidhya](https://www.analyticsvidhya.com/blog/2021/06/how-to-use-proxy-variables-in-a-regression-model/)
-* [SHAP for Explainable ML](https://github.com/slundberg/shap)
+The Basel II Accord introduces a global standard for risk-sensitive banking regulation through three pillars:
+
+| Pillar       | Description                                                                                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Pillar 1** | Banks must maintain at least 8% capital against risk-weighted assets. Statistical models used for risk must be transparent, fully documented, and validated. |
+| **Pillar 2** | Supervisors assess internal models and risk management processes, requiring models to be conservative and stress-tested.                                     |
+| **Pillar 3** | Banks must disclose risk management processes and metrics publicly, ensuring accountability and market confidence.                                           |
+
+**Modeling Implications:**
+To comply with Basel II, this project prioritizes transparent models like Logistic Regression with Weight of Evidence encoding. All model development, validation, and assumptions are carefully documented to support regulatory review.
 
 ---
 
-## Author
+##  Model Selection Trade-offs
 
-**Yitbarek Geletaw**
+| Feature            | Simple Model (LogReg + WoE)  | Complex Model (Random Forest)        |
+| ------------------ | ---------------------------- | ------------------------------------ |
+| Interpretability   | High, regulator-friendly     | Lower, requires SHAP for explanation |
+| Regulatory Fit     | Easy to document and justify | Requires additional justification    |
+| Accuracy           | Moderate baseline            | Higher predictive power              |
+| Developer Overhead | Low                          | High, tuning and monitoring required |
+| Overfitting Risk   | Low                          | Higher, requires validation          |
+| Business Impact    | Conservative decisions       | Optimized approvals, higher risk     |
+
+The project uses both approaches to balance interpretability and performance.
+
+---
+
+##  EDA Summary – Key Insights
+
+* **Highly Imbalanced Target (`FraudResult`)**: Only 0.2% of transactions are flagged as fraud, requiring class weighting or resampling.
+* **Significant Negative Amounts**: 40% of transactions have negative amounts, likely refunds or reversals. Captured via `IsNegativeAmount` feature.
+* **No Missing Values**: The dataset is clean, requiring no imputation.
+* **Severe Skewness and Outliers**: `Amount` and `Value` columns are right-skewed with large outliers; addressed via log transformation.
+* **Uninformative Feature**: `CountryCode` is constant and excluded from modeling.
+
+Visual outputs are saved in `outputs/plots/` for further reference.
+
+---
+
+##  Model Training & Evaluation Pipeline
+
+The model training process follows a structured, transparent pipeline designed for reproducibility, regulatory alignment, and model performance tracking.
+
+### ✅ **Data Split Strategy**
+
+* The processed dataset, including the `is_high_risk` proxy target, is split into **training (80%)** and **testing (20%)** sets using stratified sampling to preserve class balance.
+
+### ✅ **Models Used**
+
+Two complementary models are trained and compared:
+
+* **Logistic Regression (with Weight of Evidence encoding)**
+
+  * Interpretable, regulator-friendly baseline model
+* **Random Forest Classifier**
+
+  * More complex, non-linear model to potentially improve predictive performance
+
+### ✅ **Hyperparameter Tuning**
+
+* Performed using **GridSearchCV**, optimizing key parameters such as:
+
+  * `C` for Logistic Regression
+  * `n_estimators` and `max_depth` for Random Forest
+* Cross-validation ensures robust model selection.
+
+### ✅ **Evaluation Metrics**
+
+Model performance is assessed using:
+
+* **Accuracy**
+* **Precision**
+* **Recall (Sensitivity)**
+* **F1 Score**
+* **ROC-AUC** (preferred for imbalanced datasets)
+* Confusion matrices and classification reports are generated for further insight.
+
+### ✅ **Experiment Tracking with MLflow**
+
+All experiments, including:
+
+* Model hyperparameters
+* Evaluation metrics
+* Final trained model artifacts
+  are logged and tracked using **MLflow**, providing:
+* Transparent model comparison
+* Reproducible results
+* Version control for models
+
+This pipeline is implemented in `src/models.py` and automated via `scripts/run_models.py`.
+
+---
+
+##  Interim Task Progress
+
+| Task   | Status         | Description                                  |
+| ------ | -------------- | -------------------------------------------- |
+| Task 1 | ✅ Completed    | Basel II understanding and modeling approach |
+| Task 2 | ✅ Completed    | EDA notebook, insights, and visualizations   |
+| Task 3 | ✅ Completed    | Feature engineering with engineered features |
+| Task 4 | ✅ Completed    | RFM clustering and proxy target generation   |
+| Task 5 |  In Progress | Model training and MLflow tracking           |
+| Task 6 |  Planned      | API deployment with FastAPI and Docker       |
+
+---
