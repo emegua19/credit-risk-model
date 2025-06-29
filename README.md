@@ -1,149 +1,153 @@
-# Credit Risk Probability Model  
-**End-to-End ML Project | 10 Academy | Bati Bank – Buy Now, Pay Later**
+# Credit Risk Probability Model
 
-[![CI/CD](https://img.shields.io/github/actions/workflow/status/<your-username>/credit-risk-model/ci.yml?label=CI%2FCD&style=flat-square)](https://github.com/<your-username>/credit-risk-model/actions)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](./LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg?style=flat-square)](https://www.python.org/)
+**End-to-End ML Project | 10 Academy | Bati Bank – Buy Now, Pay Later**
 
 ---
 
 ## Project Overview
 
-This project is part of the 10 Academy KAIM5 - Week 5 Challenge. It involves building a production-grade Credit Risk Scoring System for Bati Bank, a leading financial provider. The model uses alternative eCommerce behavioral data to:
+This project involves the development of a production-grade Credit Risk Scoring System for Bati Bank, enabling them to offer a Buy Now, Pay Later (BNPL) service using alternative eCommerce behavioral data. The dataset includes 95,663 transaction records, and the objective is to:
 
-- Predict risk probability  
-- Assign credit scores  
-- Recommend loan limits and durations  
+* Predict the probability of default or credit risk for individual customers.
+* Assign interpretable and data-driven credit scores.
+* Recommend personalized loan limits and repayment durations.
 
-All of this is designed in compliance with the Basel II Capital Accord.
+The implementation is aligned with the **Basel II Capital Accord**, ensuring compliance with global risk management standards. The solution is modular, scalable, and written in an object-oriented Pythonic style, with CI/CD, unit testing, and deployment-ready components using Docker and FastAPI.
+
+---
+
+## Task Descriptions
+
+### Task 1 – Business Understanding and Regulatory Framing
+
+* Reviewed Basel II Capital Accord and its three pillars (Minimum Capital Requirements, Supervisory Review, and Market Discipline).
+* Defined project objectives aligned with regulatory compliance, interpretability, and explainability.
+* Mapped business goals (credit scoring, loan recommendation) to data science deliverables.
+* Chose simple, interpretable models (e.g., Logistic Regression with WoE) as a starting point.
+
+### Task 2 – Exploratory Data Analysis (EDA)
+
+* Performed comprehensive EDA using the `DataExplorer` class and Jupyter notebook (`notebooks/1.0-eda.ipynb`).
+* Generated and analyzed:
+
+  * Summary statistics, missing values, outliers
+  * Distributions of numerical and categorical features
+  * Correlation matrix and visual trends
+* Identified critical data patterns:
+
+  * Highly imbalanced target (`FraudResult`) – only 0.2% positive class
+  * 40% transactions with negative `Amount`, likely refunds or reversals
+  * No missing values across columns
+  * Strong right-skew and outliers in `Amount` and `Value`
+  * Uninformative feature `CountryCode` (constant = 256)
+
+### Task 3 – Feature Engineering
+
+* Implemented `DataProcessor` class in `src/data_processing.py`.
+* Created engineered features such as:
+
+  * `IsNegativeAmount`: binary flag for negative `Amount`
+  * Time-based features extracted from `TransactionStartTime`: `Hour`, `Day`, `Month`
+  * Log-transformed `Amount` and `Value` for reducing skewness
+* Saved processed output to `data/processed/processed_data.csv`
+
+### Task 4 – Proxy Target Variable via RFM Clustering
+
+* Implemented `RFMClustering` class in `src/rfm_clustering.py`
+* Computed RFM (Recency, Frequency, Monetary) features for all customers
+* Applied KMeans clustering (k=3) to segment customers
+* Assigned proxy label `is_high_risk = 1` to least engaged cluster
+* Validated cluster assumptions with `FraudResult` indicator
+
+---
+
+## EDA Summary – Key Insights
+
+1. **Highly Imbalanced Target (FraudResult)**
+   Only 193 of 95,663 rows (0.2%) have `FraudResult > 0`, indicating high class imbalance.
+
+2. **Negative Amounts Are Common**
+   38,189 transactions (\~40%) have negative `Amount`, suggesting the importance of a refund-based flag.
+
+3. **No Missing Data**
+   All columns are complete with no nulls, reducing preprocessing complexity.
+
+4. **Outliers and Skewness**
+   `Amount` and `Value` fields are right-skewed with extreme outliers; transformation is necessary.
+
+5. **Uninformative Feature**
+   `CountryCode` has no variance and will be dropped during feature selection.
 
 ---
 
 ## Project Structure
 
 ```
-
-credit-risk-model/
-├── .github/workflows/ci.yml          # GitHub Actions for CI/CD
-├── notebooks/1.0-eda.ipynb           # Exploratory data analysis
+CREDIT-RISK-MODEL/
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── data/
+│   ├── raw/
+│   └── processed/
+├── notebooks/
+│   └── 1.0-eda.ipynb
+├── outputs/
+│   ├── logs/
+│   └── plots/
 ├── src/
-│   ├── config.py                     # Configurations
-│   ├── data\_processing.py           # Feature engineering logic
-│   ├── inference.py                 # Inference code
-│   ├── models.py                    # Training and evaluation logic
-│   ├── rfm\_clustering.py            # RFM proxy variable generation
+│   ├── config.py
+│   ├── data_explorer.py
+│   ├── data_processing.py
+│   ├── inference.py
+│   ├── models.py
+│   ├── rfm_clustering.py
 │   └── api/
-│       ├── main.py                  # FastAPI backend
-│       └── pydantic\_models.py      # Input/output validation
-├── tests/                            # Unit tests for robustness
+│       ├── main.py
+│       └── pydantic_models.py
+├── tests/
+├── scripts/
+│   ├── run_data_processing.py
+│   ├── run_models.py
+│   └── run_rfm_clustering.py
+├── .gitignore
+├── .venv/
 ├── docker-compose.yml
+├── LICENSE
+├── README.md
 ├── requirements.txt
-└── README.md
-
-````
-
----
-
-## Credit Scoring Business Understanding
-
-### 1. Basel II and the Need for Interpretable, Auditable Models
-
-The Basel II Accord outlines a comprehensive framework for risk-sensitive banking regulation, composed of three interrelated pillars:
-
-| Pillar       | Description |
-|--------------|-------------|
-| Pillar 1     | Ensures banks hold ≥ 8% capital against risk-weighted assets (RWA). Allows statistical risk models (IRB) requiring full documentation and validation. |
-| Pillar 2     | Supervisors evaluate a bank's internal risk models and capital adequacy under stress. Models must be defensible, conservative, and stress-tested. |
-| Pillar 3     | Enforces transparency with public disclosure of risk management processes and metrics, creating external pressure to maintain model quality. |
-
-**Modeling Implications:**  
-We prioritize transparent models (e.g., Logistic Regression with WoE) and maintain detailed documentation to satisfy internal validation and regulatory audits.
-
----
-
-### 2. Why a Proxy Variable is Needed — and the Risks
-
-The dataset does not include a direct label for “default.” Instead, we build a proxy target variable:
-
-- Use Recency, Frequency, and Monetary (RFM) features  
-- Cluster customers using K-Means (k=3)  
-- Label the least engaged group as high-risk (`is_high_risk = 1`)
-
-**Risks Involved:**
-
-- Misclassification: Low-frequency but creditworthy customers may be wrongly denied.
-- Bias: Proxy ignores critical variables like income or debt history.
-- Endogeneity: Behavior might correlate with untracked confounders, biasing predictions.
-- Compliance: Regulatory concerns may arise if proxy logic isn't well-validated.
-
-**Mitigation:** Use clustering diagnostics, domain expert validation, and incorporate more data sources when available.
-
----
-
-### 3. Model Selection Trade-Offs
-
-| Feature             | Simple Model (Logistic Regression + WoE)        | Complex Model (e.g., Gradient Boosting, XGBoost) |
-|---------------------|--------------------------------------------------|---------------------------------------------------|
-| Interpretability     | Transparent and regulator-friendly               | Black-box; requires SHAP or LIME for explanation  |
-| Regulatory Fit       | Easily documented and auditable                  | Requires additional justification and validation  |
-| Accuracy             | May underfit complex relationships               | High predictive power for complex patterns        |
-| Developer Overhead   | Simple to train, debug, and deploy               | Resource-intensive; requires tuning and monitoring |
-| Overfitting Risk     | Low on small data                                | Higher; needs validation and regularization       |
-| Business Impact      | Conservative decisions may miss credit opportunities | Optimized approval rates, but harder to govern    |
-
-**Conclusion:**  
-Start with simple models to meet regulatory expectations. Consider complex models only if they significantly improve accuracy and can be explained effectively.
-
----
-
-## EDA Summary – Key Insights
-
-1. **Highly Imbalanced Target (FraudResult):**  
-   Out of 95,663 transactions, only 193 rows have `FraudResult > 0`, meaning fraudulent activity accounts for just **0.2%** of all data. This extreme imbalance will require mitigation strategies such as class weighting, oversampling, or specialized evaluation metrics during model training.
-
-2. **Significant Number of Negative Amounts:**  
-   Approximately **40% of transactions** (38,189 rows) have a **negative `Amount`**, suggesting that negative values are not errors but likely represent refunds, reversals, or failed payments. This characteristic will be captured in a new binary feature `IsNegativeAmount`.
-
-3. **No Missing Values:**  
-   The dataset is clean, with **no missing values** across all columns. This simplifies data preparation and allows full usage of available features without imputation.
-
-4. **Severe Skewness and Outliers in Amount/Value:**  
-   The `Amount` and `Value` columns show heavy **right-skew** and contain extreme **outliers** (up to 9.88 million), while the median is near 1,000. These will require transformation or outlier treatment to avoid biasing the model.
-
-5. **Uninformative Feature – CountryCode:**  
-   The `CountryCode` column has **no variability** (all values are 256), indicating it provides no discriminatory power for the model and should be dropped during preprocessing.
+└── .pytest_cache/
+```
 
 ---
 
 ## Setup Instructions
 
-1. Clone the repository:
 ```bash
+# Clone the repository
 git clone https://github.com/emegua19/credit-risk-model.git
 cd credit-risk-model
-````
 
-2. Install dependencies:
+# Set up and activate virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-3. Run EDA:
-
-```bash
+# Run EDA
 jupyter notebook notebooks/1.0-eda.ipynb
-```
 
-4. Train models:
+# Run data processing
+python scripts/run_data_processing.py
 
-```bash
-python src/models.py
-```
+# Generate RFM proxy labels
+python scripts/run_rfm_clustering.py
 
-5. Run the API with Docker:
+# Train models
+python scripts/run_models.py
 
-```bash
+# Deploy with Docker
 docker-compose up --build
 ```
 
@@ -153,7 +157,7 @@ docker-compose up --build
 
 * [Basel II: Overview – Investopedia](https://www.investopedia.com/terms/b/baselii.asp)
 * [Credit Risk Scoring with Scorecards – TDS](https://towardsdatascience.com/how-to-develop-a-credit-risk-model-and-scorecard-91335fc01f03)
-* [Proxy Variables Explained – Analytics Vidhya](https://www.analyticsvidhya.com/blog/2021/06/how-to-use-proxy-variables-in-a-regression-model/)
+* [Proxy Variables – Analytics Vidhya](https://www.analyticsvidhya.com/blog/2021/06/how-to-use-proxy-variables-in-a-regression-model/)
 * [SHAP for Explainable ML](https://github.com/slundberg/shap)
 
 ---
