@@ -96,6 +96,25 @@ Start with simple models to meet regulatory expectations. Consider complex model
 
 ---
 
+## EDA Summary – Key Insights
+
+1. **Highly Imbalanced Target (FraudResult):**  
+   Out of 95,663 transactions, only 193 rows have `FraudResult > 0`, meaning fraudulent activity accounts for just **0.2%** of all data. This extreme imbalance will require mitigation strategies such as class weighting, oversampling, or specialized evaluation metrics during model training.
+
+2. **Significant Number of Negative Amounts:**  
+   Approximately **40% of transactions** (38,189 rows) have a **negative `Amount`**, suggesting that negative values are not errors but likely represent refunds, reversals, or failed payments. This characteristic will be captured in a new binary feature `IsNegativeAmount`.
+
+3. **No Missing Values:**  
+   The dataset is clean, with **no missing values** across all columns. This simplifies data preparation and allows full usage of available features without imputation.
+
+4. **Severe Skewness and Outliers in Amount/Value:**  
+   The `Amount` and `Value` columns show heavy **right-skew** and contain extreme **outliers** (up to 9.88 million), while the median is near 1,000. These will require transformation or outlier treatment to avoid biasing the model.
+
+5. **Uninformative Feature – CountryCode:**  
+   The `CountryCode` column has **no variability** (all values are 256), indicating it provides no discriminatory power for the model and should be dropped during preprocessing.
+
+---
+
 ## Setup Instructions
 
 1. Clone the repository:
@@ -142,4 +161,3 @@ docker-compose up --build
 ## Author
 
 **Yitbarek Geletaw**
-Analytics Engineer – Bati Bank
