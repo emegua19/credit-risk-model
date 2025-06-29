@@ -167,7 +167,7 @@ The following images are generated and saved in `outputs/plots/`:
 - Log transformation of `Amount` and `Value` will reduce skewness for better model performance.
 - `CountryCode` (constant at 256) is excluded to avoid noise.
 
-These visualizations and interpretations will be further detailed in `1.0-eda.ipynb` with enhanced Markdown.
+These visualizations and interpretations will be further detailed in `1.0-eda.ipynb` with enhanced Markdown to improve comprehensiveness.
 
 ---
 
