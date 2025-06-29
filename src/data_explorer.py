@@ -57,8 +57,8 @@ class DataExplorer:
             plt.tight_layout()
             filename = os.path.join(self.output_dir, f"distribution_{col.lower()}.png")
             plt.savefig(filename)
+            plt.show()
             print(f"Saved: {filename}")
-            plt.close()
 
     def plot_categorical_counts(self, cat_cols, top_n=10):
         for col in cat_cols:
@@ -70,8 +70,8 @@ class DataExplorer:
             plt.tight_layout()
             filename = os.path.join(self.output_dir, f"category_counts_{col.lower()}.png")
             plt.savefig(filename)
+            plt.show()
             print(f"Saved: {filename}")
-            plt.close()
 
     def correlation_matrix(self):
         corr = self.df.corr(numeric_only=True)
@@ -81,8 +81,8 @@ class DataExplorer:
         plt.tight_layout()
         filename = os.path.join(self.output_dir, "correlation_matrix.png")
         plt.savefig(filename)
+        plt.show()
         print(f"Saved: {filename}")
-        plt.close()
 
     def box_plots(self, num_cols):
         for col in num_cols:
@@ -92,8 +92,8 @@ class DataExplorer:
             plt.tight_layout()
             filename = os.path.join(self.output_dir, f"boxplot_{col.lower()}.png")
             plt.savefig(filename)
+            plt.show()
             print(f"Saved: {filename}")
-            plt.close()
 
     def add_time_columns(self, time_col="TransactionStartTime"):
         self.df[time_col] = pd.to_datetime(self.df[time_col], errors="coerce")
@@ -114,5 +114,5 @@ class DataExplorer:
         plt.tight_layout()
         filename = os.path.join(self.output_dir, "transactions_by_hour.png")
         plt.savefig(filename)
+        plt.show()
         print(f"Saved: {filename}")
-        plt.close()
